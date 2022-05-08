@@ -22,8 +22,8 @@ namespace ext
 	{
 		if (m_thread.valid() && g_process->is_running())
 			m_thread.set_state(rage::eThreadState::Paused);
-		//if (!m_selected_script_name.empty())
-			//restore_thread();
+		if (!m_selected_script_name.empty())
+			restore_thread();
 		g_script_loader = nullptr;
 	}
 
