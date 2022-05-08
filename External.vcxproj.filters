@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="file_manager">
+      <UniqueIdentifier>{9FDE6993-8B41-F937-34C7-31EE2009C5BA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rage">
+      <UniqueIdentifier>{043D9D7C-F073-9E0D-9960-841085761A0F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\common.hpp" />
+    <ClInclude Include="src\file_manager.hpp" />
+    <ClInclude Include="src\file_manager\file.hpp">
+      <Filter>file_manager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\file_manager\folder.hpp">
+      <Filter>file_manager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\logger.hpp" />
+    <ClInclude Include="src\pattern.hpp" />
+    <ClInclude Include="src\pointer.hpp" />
+    <ClInclude Include="src\pointers.hpp" />
+    <ClInclude Include="src\process.hpp" />
+    <ClInclude Include="src\rage\joaat.hpp">
+      <Filter>rage</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rage\natives.hpp">
+      <Filter>rage</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rage\script_program.hpp">
+      <Filter>rage</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rage\script_thread.hpp">
+      <Filter>rage</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script_loader.hpp" />
+    <ClInclude Include="src\ysc_file.hpp" />
+    <ClInclude Include="src\renderer.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\common.cpp" />
+    <ClCompile Include="src\file_manager\file.cpp">
+      <Filter>file_manager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file_manager\folder.cpp">
+      <Filter>file_manager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\pattern.cpp" />
+    <ClCompile Include="src\pointers.cpp" />
+    <ClCompile Include="src\script_loader.cpp" />
+    <ClCompile Include="src\ysc_file.cpp" />
+    <ClCompile Include="src\renderer.cpp" />
+    <ClCompile Include="code_controller_file.hpp" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,164 @@
+#include "script_loader.hpp"
+#include "crossmap.hpp"
+#include "rage/natives.hpp"
+#include "natives.hpp"
+#include "ysc_file.hpp"
+#include "../code_controller_file.hpp"
+
+namespace ext 
+{
+	script_loader::script_loader() :
+		m_native_registration(g_pointers->m_native_registration_table),
+		m_required_script($(code_controller))
+	{
+		find_thread();
+		m_file_path.append(std::getenv("appdata")).append("External").append("Scripts");
+		if (!fs::exists(m_file_path))
+			fs::create_directories(m_file_path);
+		g_script_loader = this;
+	}
+
+	script_loader::~script_loader()
+	{
+		if (m_thread.valid() && g_process->is_running())
+			m_thread.set_state(rage::eThreadState::Paused);
+		//if (!m_selected_script_name.empty())
+			//restore_thread();
+		g_script_loader = nullptr;
+	}
+
+	void script_loader::find_thread()
+	{
+		LOG(INFO) << "Waiting for code_controller...";
+		while ((!m_thread.valid()) || (!m_program.valid())) {
+			m_thread = rage::scrThread::get_thread_by_hash(m_required_script);
+			m_program = rage::scrProgram::get_program_by_hash(m_required_script);
+			Sleep(100);
+		}
+	}
+
+	void script_loader::restore_thread() {
+		auto fPath = m_file_path;
+		fPath.append("codeController.ysc");
+		std::ofstream file(fPath, std::ios::binary); //Open file handle
+		file.write(codeControllerYsc, arrSize); //Write arr
+		ysc_file yscF(fPath);
+		yscF.load(); //Overwrite current YSC
+		//Register natives
+		for (auto& p : yscF.m_natives) {
+			m_handler_cache[p] = m_native_registration.get_entrypoint_from_hash(p);
+		}
+		//Pause thrs
+		m_thread.set_state(rage::eThreadState::Paused);
+		g_process->set_paused(true);
+		m_thread.reset(); //Reset thr handle
+		//Do checks
+		if (m_program.get_code_size() < yscF.m_code_length)
+			LOG(FATAL) << "Cannot fit " << yscF.m_code_length << " bytes into program, maximum is " << m_program.get_code_size();
+		if (m_program.get_string_size() < yscF.m_string_size)
+			LOG(FATAL) << "Cannot fit " << yscF.m_string_size << " string chars into program, maximum is " << m_program.get_string_size();
+		if (m_program.get_num_natives() < yscF.m_natives_count)
+			LOG(FATAL) << "Cannot fit " << yscF.m_natives_count << " natives into program, maximum is " << m_program.get_num_natives();
+		if ((m_thread.get_stack_size() - 200) < yscF.m_static_count)
+			LOG(FATAL) << "Cannot fit " << yscF.m_static_count << " statics into stack, maximum is " << (m_thread.get_stack_size() - 200);
+		//Write codepage
+		for (int i = 0; i < yscF.m_code_block_list.size(); i++) {
+			int tablesize = ((i + 1) * 0x4000 >= yscF.m_code_length) ? yscF.m_code_length % 0x4000 : 0x4000;
+			uint64_t codepage = m_program.get_code_page(i);
+			g_process->write_raw(codepage, tablesize, yscF.m_code_block_list[i]);
+		}
+		//Write stringpage
+		for (int i = 0; i < yscF.m_string_block_list.size(); i++) {
+			int tablesize = ((i + 1) * 0x4000 >= yscF.m_string_size) ? yscF.m_string_size % 0x4000 : 0x4000;
+			uint64_t stringpage = m_program.get_string_page(i);
+			g_process->write_raw(stringpage, tablesize, yscF.m_string_block_list[i]);
+		}
+		//Write natives to native cache
+		uint64_t natives = m_program.get_native_table();
+		for (int i = 0; i < yscF.m_natives.size(); i++) {
+			g_process->write<std::uint64_t>(natives + (uint64_t)(i * 8), m_handler_cache[yscF.m_natives[i]]);
+		}
+		//Write statics
+		g_process->write_raw(m_thread.get_stack(), yscF.m_static_count * 8, yscF.m_statics);
+		m_thread.set_stack_ptr(yscF.m_static_count + 1); //Set stack pointer
+		m_program.mark_program_as_ours(); //Set program as ours, doesn't matter for this anyways
+		g_process->set_paused(false); //Re-start our thread
+		m_thread.set_state(rage::eThreadState::Running); //And set the thread state of code_controller to true
+		file.close(); //Close file handle
+		if (fs::exists(fPath)) //Ensure it exists
+			remove(fPath); //Delete codeController.ysc
+	}
+
+	void script_loader::pick_script()
+	{
+		// https://stackoverflow.com/a/49652087
+
+		OPENFILENAME ofn = { 0 };
+		// Initialize remaining fields of OPENFILENAME structure
+		ofn.lStructSize = sizeof(ofn);
+		ofn.hwndOwner = FindWindowA(nullptr, "External");
+		ofn.lpstrFile = m_file_name;
+		ofn.nMaxFile = sizeof(m_file_name);
+		ofn.lpstrFilter = L"All\0*.*\0Text\0*.TXT\0";
+		ofn.nFilterIndex = 1;
+		ofn.lpstrFileTitle = NULL;
+		ofn.nMaxFileTitle = 0;
+		ofn.lpstrInitialDir = NULL;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+		if (GetOpenFileName(&ofn) != TRUE) {
+			exit(0);
+		}
+	}
+
+	void script_loader::initalize_thread()
+	{
+		LOG(INFO) << "Preparing script...";
+		auto newFilePath = m_file_path;
+		newFilePath.append(m_selected_script_name.c_str());
+		ysc_file file(newFilePath);
+		file.load();
+		LOG(INFO) << "Caching native handlers...";
+		for (auto& p : file.m_natives) {
+			m_handler_cache[p] = m_native_registration.get_entrypoint_from_hash(p);
+		}
+		m_thread.set_state(rage::eThreadState::Paused);
+		g_process->set_paused(true);
+		m_thread.reset();
+		if (m_program.get_code_size() < file.m_code_length)
+			LOG(FATAL) << "Cannot fit " << file.m_code_length << " bytes into program, maximum is " << m_program.get_code_size();
+		if (m_program.get_string_size() < file.m_string_size)
+			LOG(FATAL) << "Cannot fit " << file.m_string_size << " string chars into program, maximum is " << m_program.get_string_size();
+		if (m_program.get_num_natives() < file.m_natives_count)
+			LOG(FATAL) << "Cannot fit " << file.m_natives_count << " natives into program, maximum is " << m_program.get_num_natives();
+		if ((m_thread.get_stack_size() - 200) < file.m_static_count)
+			LOG(FATAL) << "Cannot fit " << file.m_static_count << " statics into stack, maximum is " << (m_thread.get_stack_size() - 200);
+		for (int i = 0; i < file.m_code_block_list.size(); i++) {
+			int tablesize = ((i + 1) * 0x4000 >= file.m_code_length) ? file.m_code_length % 0x4000 : 0x4000;
+			uint64_t codepage = m_program.get_code_page(i);
+			g_process->write_raw(codepage, tablesize, file.m_code_block_list[i]);
+		}
+		for (int i = 0; i < file.m_string_block_list.size(); i++) {
+			int tablesize = ((i + 1) * 0x4000 >= file.m_string_size) ? file.m_string_size % 0x4000 : 0x4000;
+			uint64_t stringpage = m_program.get_string_page(i);
+			g_process->write_raw(stringpage, tablesize, file.m_string_block_list[i]);
+		}
+		uint64_t natives = m_program.get_native_table();
+		for (int i = 0; i < file.m_natives.size(); i++) {
+			g_process->write<std::uint64_t>(natives + (uint64_t)(i * 8), m_handler_cache[file.m_natives[i]]);
+		}
+		g_process->write_raw(m_thread.get_stack(), file.m_static_count * 8, file.m_statics);
+		m_thread.set_stack_ptr(file.m_static_count + 1);
+		// model spawn bypass
+		auto m_original_vft = m_thread.get_handler_vft();
+		m_fake_vft = g_process->allocate(20 * 8);
+		for (uint64_t i = 0; i < 20; i++) {
+			g_process->write<uint64_t>(m_fake_vft + (i * 8), g_process->read<uint64_t>(m_original_vft + (i * 8)));
+		}
+		g_process->write<uint64_t>(m_fake_vft + (6 * 8), g_pointers->m_ret_true_function);
+		m_thread.set_handler_vft(m_fake_vft);
+		m_program.mark_program_as_ours();
+		g_process->set_paused(false);
+		m_thread.set_state(rage::eThreadState::Running);
+	}
+}
