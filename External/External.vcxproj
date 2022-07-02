@@ -169,6 +169,7 @@
     <ClInclude Include="src\file_manager.hpp" />
     <ClInclude Include="src\file_manager\file.hpp" />
     <ClInclude Include="src\file_manager\folder.hpp" />
+    <ClInclude Include="src\globals.hpp" />
     <ClInclude Include="src\logger.hpp" />
     <ClInclude Include="src\pattern.hpp" />
     <ClInclude Include="src\pointer.hpp" />

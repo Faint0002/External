@@ -37,6 +37,7 @@
     <ClInclude Include="src\script_loader.hpp" />
     <ClInclude Include="src\ysc_file.hpp" />
     <ClInclude Include="src\renderer.hpp" />
+    <ClInclude Include="src\globals.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\common.cpp" />

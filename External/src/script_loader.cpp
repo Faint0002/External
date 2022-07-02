@@ -4,6 +4,7 @@
 #include "natives.hpp"
 #include "ysc_file.hpp"
 #include <urlmon.h>
+#include "globals.hpp"
 #pragma comment(lib, "urlmon")
 
 namespace ext 
@@ -21,7 +22,7 @@ namespace ext
 
 	script_loader::~script_loader()
 	{
-		if (m_thread.valid() && g_process->is_running()) {
+		if (m_thread.valid() && g_running) {
 			m_thread.set_state(rage::eThreadState::Paused);
 			if (!m_selected_script_name.empty())
 				restore_thread();
@@ -94,6 +95,8 @@ namespace ext
 		}
 		g_process->write<uint64_t>(m_fake_vft + (6 * 8), g_pointers->m_ret_true_function);
 		m_thread.set_handler_vft(m_fake_vft);
+		// dlc story mode bypass
+		globals(4533757).as<bool>(true);
 		m_program.mark_program_as_ours();
 		g_process->set_paused(false);
 		m_thread.set_state(rage::eThreadState::Running);

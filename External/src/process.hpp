@@ -46,11 +46,6 @@ namespace ext
 			g_process = nullptr;
 		}
 
-		inline bool is_running() 
-		{
-			return WaitForSingleObject(m_handle, 0) == WAIT_TIMEOUT;
-		}
-
 		inline void set_paused(bool paused)
 		{
 			if (paused)

@@ -34,13 +34,13 @@ int main() {
 	g_renderer.start_renderer();
 	auto script_loader_instance = std::make_unique<script_loader>();
 	LOG(INFO) << "Script loader initialized.";
-	while (g_running && g_process->is_running())  {
+	while (g_running)  {
 		g_renderer.present_hk();
 		while (PeekMessage(&g_msg, NULL, 0U, 0U, PM_REMOVE)) {
 			TranslateMessage(&g_msg);
 			DispatchMessage(&g_msg);
 			if (g_msg.message == WM_QUIT)
-				exit(0);
+				g_running = false;
 		}
 	}
 	script_loader_instance.reset();
