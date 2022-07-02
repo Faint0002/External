@@ -15,7 +15,6 @@ namespace ext
 	public:
 		void find_thread();
 		void restore_thread();
-		void pick_script();
 		void initalize_thread();
 	public:
 		std::map<uint64_t, uint64_t> m_handler_cache{};
@@ -24,7 +23,6 @@ namespace ext
 		rage::scrThread m_thread{ 0 };
 		rage::scrProgram m_program{ 0 };
 		std::uint64_t m_fake_vft;
-		TCHAR m_file_name[260]{};
 		fs::path m_file_path;
 		std::string m_selected_script_name;
 	};

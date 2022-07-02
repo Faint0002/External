@@ -52,6 +52,5 @@
     <ClCompile Include="src\script_loader.cpp" />
     <ClCompile Include="src\ysc_file.cpp" />
     <ClCompile Include="src\renderer.cpp" />
-    <ClCompile Include="code_controller_file.hpp" />
   </ItemGroup>
 </Project>

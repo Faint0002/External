@@ -7,6 +7,7 @@ namespace ext
 
 	class process 
 	{
+	public:
 		HANDLE m_handle;
 		uint32_t m_pid;
 

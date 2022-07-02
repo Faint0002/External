@@ -43,6 +43,11 @@ namespace rage
 			return ext::g_process->read<std::uint32_t>(address + 0x2C);
 		}
 
+		inline std::uint32_t get_num_globals() const
+		{
+			return ext::g_process->read<std::uint32_t>(address + 0x28);
+		}
+
 		// for the internal debugger
 		inline void mark_program_as_ours()
 		{
@@ -59,11 +64,29 @@ namespace rage
 			return ext::g_process->read<std::uint64_t>(ext::g_process->read<std::uint64_t>(address + 0x68) + index * 8);
 		}
 
+		inline std::uint64_t get_global_page(std::uint64_t index) const
+		{
+			return ext::g_process->read<std::uint64_t>(ext::g_process->read<std::uint64_t>(address + 0x38) + index * 8);
+		}
+
 		inline std::uint64_t get_native_table() const
 		{
 			return ext::g_process->read<std::uint64_t>(address + 0x40);
 		}
 
+		static inline std::list<scrProgram> get_program_hashes()
+		{
+			std::uint32_t programs = ext::g_process->read<std::uint32_t>(ext::g_pointers->m_script_program_table + 0x18);
+			std::uint64_t program_list = ext::g_process->read<std::uint64_t>(ext::g_pointers->m_script_program_table);
+			std::list<scrProgram> list;
+			for (int i = 0; i < programs; i++)
+			{
+				std::uint64_t program = ext::g_process->read<std::uint64_t>(program_list + (i * 0x10));
+				list.push_back(scrProgram(program));
+			}
+
+			return list;
+		}
 		static inline scrProgram get_program_by_hash(joaat_t hash)
 		{
 			std::uint32_t programs = ext::g_process->read<std::uint32_t>(ext::g_pointers->m_script_program_table + 0x18);

@@ -58,20 +58,20 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\bin\lib\Debug\</OutDir>
+    <OutDir>..\bin\Debug</OutDir>
     <IntDir>..\bin\int\Debug\External\</IntDir>
     <TargetName>external</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\bin\lib\Release\</OutDir>
-    <IntDir>..\bin\int\Release\External\</IntDir>
+    <OutDir>..\bin\Release</OutDir>
+    <IntDir>..\bin\Release\int\External</IntDir>
     <TargetName>external</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
     <IncludePath>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64;$(SolutionDir)bin\lib\Debug;$(SolutionDir)bin\lib\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -131,7 +131,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\bin\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateMapFile>true</GenerateMapFile>
-      <AdditionalDependencies>d3d11.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;dxgi.lib;urlmon.lib;ImGui.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -183,7 +183,6 @@
     <ClInclude Include="src\ysc_file.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="code_controller_file.hpp" />
     <ClCompile Include="src\common.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

@@ -96,6 +96,24 @@ namespace rage
 			ext::g_process->write<std::uint64_t>(ext::g_process->read<std::uint64_t>(address + 0x110), vft);
 		}
 
+		static inline std::vector<const char*> get_thread_names()
+		{
+			std::uint16_t num_threads = ext::g_process->read<std::uint16_t>(ext::g_pointers->m_script_threads + 10);
+			std::uint64_t threads_base = ext::g_process->read<std::uint64_t>(ext::g_pointers->m_script_threads);
+			std::vector<const char*> list;
+			for (int i = 0; i < num_threads; i++)
+			{
+				scrThread thread(ext::g_process->read<std::uint64_t>(threads_base + i * 8));
+				if (thread.valid()) {
+					static char m_name[0x40]{};
+					ReadProcessMemory(ext::g_process->m_handle, (LPCVOID)thread.get_name(), (LPVOID)&m_name, sizeof(m_name), nullptr);
+					std::cout << m_name << " | " << thread.get_stack_size() - 200 << '\n';
+					list.push_back(m_name);
+				}
+			}
+			return list;
+		}
+
 		static inline scrThread get_thread_by_hash(joaat_t hash)
 		{
 			std::uint16_t num_threads = ext::g_process->read<std::uint16_t>(ext::g_pointers->m_script_threads + 10);

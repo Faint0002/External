@@ -20,7 +20,7 @@ public:
 public:
 	bool present_hk();
 public:
-	bool isWndOpen = false;
+	bool isWndOpen = true;
 	void window();
 public:
 	static LRESULT WINAPI wndproc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
