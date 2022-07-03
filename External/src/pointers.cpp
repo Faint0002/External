@@ -8,7 +8,6 @@ namespace ext
 		m_script_threads(pattern("ST", "45 33 F6 8B E9 85 C9 B8").sub(4).rip().sub(8)),
 		m_script_program_table(pattern("SP", "44 8B 0D ? ? ? ? 4C 8B 1D ? ? ? ? 48 8B 1D ? ? ? ? 41 83 F8 FF 74 3F 49 63 C0 42 0F B6 0C 18 81 E1").add(17).rip()),
 		m_native_registration_table(pattern("NH", "48 8D 0D ? ? ? ? 48 8B 14 FA E8 ? ? ? ? 48 85 C0 75 0A").add(3).rip()),
-		m_script_globals(pattern("SG", "48 8D 15 ? ? ? ? 4C 8B C0 E8 ? ? ? ? 48 85 FF 48 89 1D").add(3).rip()),
 		m_ret_true_function(pattern("RT", "B0 01 C3"))
 	{
 		g_pointers = this;

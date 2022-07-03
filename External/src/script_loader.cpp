@@ -4,7 +4,6 @@
 #include "natives.hpp"
 #include "ysc_file.hpp"
 #include <urlmon.h>
-#include "globals.hpp"
 #pragma comment(lib, "urlmon")
 
 namespace ext 
@@ -87,16 +86,18 @@ namespace ext
 		}
 		g_process->write_raw(m_thread.get_stack(), file.m_static_count * 8, file.m_statics);
 		m_thread.set_stack_ptr(file.m_static_count + 1);
-		// model spawn bypass
+		// model spawn bypass (Set to a networked thread if it's valid and a session is started, or we create a fake vft to simulate a networked thread)
 		auto m_original_vft = m_thread.get_handler_vft();
+		auto networked_thrad = rage::scrThread::get_thread_by_hash($(freemode));
 		m_fake_vft = g_process->allocate(20 * 8);
-		for (uint64_t i = 0; i < 20; i++) {
-			g_process->write<uint64_t>(m_fake_vft + (i * 8), g_process->read<uint64_t>(m_original_vft + (i * 8)));
+		if (networked_thrad.valid() && *g_pointers->m_is_session_started)
+			m_fake_vft = networked_thrad.get_handler_vft();
+		else {
+			for (uint64_t i = 0; i < 20; i++)
+				g_process->write<uint64_t>(m_fake_vft + (i * 8), g_process->read<uint64_t>(m_original_vft + (i * 8)));
+			g_process->write<uint64_t>(m_fake_vft + (6 * 8), g_pointers->m_ret_true_function);
 		}
-		g_process->write<uint64_t>(m_fake_vft + (6 * 8), g_pointers->m_ret_true_function);
 		m_thread.set_handler_vft(m_fake_vft);
-		// dlc story mode bypass
-		globals(4533757).as<bool>(true);
 		m_program.mark_program_as_ours();
 		g_process->set_paused(false);
 		m_thread.set_state(rage::eThreadState::Running);
